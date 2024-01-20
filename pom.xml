@@ -366,7 +366,7 @@
     </distributionManagement>
 
     <scm>
-        <url>https://github.com/AssaAbloy-GlobalSolutions/axon-extension-dynamodb</url>
+        <url>https://github.com/AssaAbloy-GlobalSolutions/jackson-bean-validation</url>
         <connection>scm:git:git@github.com:AssaAbloy-GlobalSolutions/jackson-bean-validation.git</connection>
         <developerConnection>scm:git:git@github.com:AssaAbloy-GlobalSolutions/jackson-bean-validation.git</developerConnection>
         <tag>0.1.0</tag>
