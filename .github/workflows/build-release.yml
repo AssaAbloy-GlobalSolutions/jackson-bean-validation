@@ -1,0 +1,43 @@
+name: 🚀 release and deploy
+on:
+  workflow_dispatch
+
+jobs:
+  build:
+    name: release next version
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/development'
+    steps:
+      - name: checkout code
+        uses: actions/checkout@v3
+
+      - name: setup jdk and maven
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'corretto'
+          cache: 'maven'
+          server-id: 'sonatype-nexus'
+          server-username: DEPLOY_USERNAME
+          server-password: DEPLOY_PASSWORD
+          # only entry that can resolve the secret directly
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          gpg-passphrase: GPG_PASSPHRASE
+
+      - name: release and deploy
+        env:
+          DEPLOY_USERNAME: ${{ secrets.DEPLOY_USERNAME }}
+          DEPLOY_PASSWORD: ${{ secrets.DEPLOY_PASSWORD }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+        run: |
+          mkdir ~/.ssh && chmod 700 ~/.ssh 
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_ed25519
+          echo "${{ secrets.SSH_KEY_PUB }}" > ~/.ssh/id_ed25519.pub
+          chmod 400 ~/.ssh/id_ed25519*
+          
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          
+          mvn -B release:prepare -P release
+          mvn -B release:perform -P release
+        
