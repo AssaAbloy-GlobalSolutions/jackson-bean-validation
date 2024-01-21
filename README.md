@@ -20,7 +20,7 @@ which is thrown during `BeanDeserializer::deserialize`.
 - **Extended Validation Scope**: Implicit `@NotNull` behavior also applies to the values inside maps,
   collections, and arrays, wherever applicable.
 
-- **Support for value classes**: Value classes (formerly, inline classes) are boxed before validation
+- **Support for Inline Value Classes**: Value classes are boxed before validation
   to preserve and recognize any constraint annotations.
 
 - **Null Handling for Primitive Fields:** When enabled, `DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES`
