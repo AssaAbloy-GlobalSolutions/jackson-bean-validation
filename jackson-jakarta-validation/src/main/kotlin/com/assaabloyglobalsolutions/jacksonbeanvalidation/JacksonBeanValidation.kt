@@ -25,6 +25,6 @@ fun kotlinBeanValidationModule(
     validator: Validator
 ): SimpleModule {
     val kbv = KotlinBeanValidator(validator)
-    return SimpleModule("magnetar.fulliautomatix.jacksonbeanvalidation.JacksonBeanValidation")
+    return SimpleModule("com.assaabloyglobalsolutions.jacksonbeanvalidation.JacksonBeanValidation")
         .setDeserializerModifier(ConstraintValidatingDeserializerModifier(kbv))
 }
