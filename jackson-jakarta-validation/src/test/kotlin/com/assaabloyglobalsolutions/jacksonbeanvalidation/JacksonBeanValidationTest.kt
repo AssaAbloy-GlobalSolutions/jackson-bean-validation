@@ -57,7 +57,9 @@ class JacksonBeanValidationTest {
 
     @Test
     fun `implicit @NotNull on maps disallowing null values`() {
-        val invalid = mapper.readTree("""
+        assertViolations<ClassWithMapOfNodes>(
+            mapper,
+            """
             {
               "map" : { 
                 "a": null,
@@ -65,9 +67,7 @@ class JacksonBeanValidationTest {
                 "c": null
               }
             }
-        """.trimIndent())
-
-        assertViolations({ mapper.treeToValue<ClassWithMapOfNodes>(invalid) },
+            """,
             "map[a]: must not be null",
             "map[c]: must not be null"
         )
@@ -75,7 +75,9 @@ class JacksonBeanValidationTest {
 
     @Test
     fun `implicit @NotNull on collections disallowing null values`() {
-        val invalid = mapper.readTree("""
+        assertViolations<ClassWithListOfNodes>(
+            mapper,
+            """
             {
               "list" : [ 
                 null,
@@ -83,9 +85,7 @@ class JacksonBeanValidationTest {
                 null
               ]
             }
-        """.trimIndent())
-
-        assertViolations({ mapper.treeToValue<ClassWithListOfNodes>(invalid) },
+            """,
             "list[0]: must not be null",
             "list[2]: must not be null"
         )
@@ -93,7 +93,9 @@ class JacksonBeanValidationTest {
 
     @Test
     fun `class with array`() {
-        val invalid = mapper.readTree("""
+        assertViolations<ClassWithArrays>(
+            mapper,
+            """
             {
               "nodes" : [ 
                   null,
@@ -106,9 +108,7 @@ class JacksonBeanValidationTest {
                   "valid"
               ]
             }
-        """.trimIndent())
-
-        assertViolations({ mapper.treeToValue<ClassWithArrays>(invalid) },
+            """,
             "nodes[0]: must not be null",
             "nodes[2]: must not be null",
             "strings[1]: must not be null",
