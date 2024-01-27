@@ -1,11 +1,16 @@
 package com.assaabloyglobalsolutions.jacksonbeanvalidation
 
+import com.assaabloyglobalsolutions.jacksonbeanvalidation.validation.jakarta.constraintViolation
 import jakarta.validation.ConstraintViolation
 
 class DataValidationException(
     val violations: List<ConstraintViolation<*>>,
     message: String = toString(violations),
 ) : RuntimeException(message) {
+
+    constructor(
+        message: String
+    ) : this(constraintViolation(message))
 
     constructor(
         violation: ConstraintViolation<*>

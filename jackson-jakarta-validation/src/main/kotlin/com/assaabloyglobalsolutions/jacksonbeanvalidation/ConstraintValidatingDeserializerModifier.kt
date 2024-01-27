@@ -18,7 +18,7 @@ internal class ConstraintValidatingDeserializerModifier(
         beanDesc: BeanDescription,
         deserializer: JsonDeserializer<*>
     ): JsonDeserializer<*> = when {
-        deserializer !is BeanDeserializer -> deserializer
+        deserializer !is BeanDeserializer -> PathReconstructingDeserializer(deserializer)
         beanDesc.hasPrimaryConstructor    -> ConstraintValidatingDeserializer(deserializer, validator)
         else                              -> PathReconstructingDeserializer(deserializer)
     }

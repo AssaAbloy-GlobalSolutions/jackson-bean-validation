@@ -5,7 +5,7 @@ import jakarta.validation.metadata.ConstraintDescriptor
 import jakarta.validation.metadata.ValidateUnwrappedValue
 import kotlin.reflect.KClass
 
-fun constraintViolation(
+internal fun constraintViolation(
     message: String,
     rootBeanClass: KClass<Any>? = null,
 ): ConstraintViolation<*> {

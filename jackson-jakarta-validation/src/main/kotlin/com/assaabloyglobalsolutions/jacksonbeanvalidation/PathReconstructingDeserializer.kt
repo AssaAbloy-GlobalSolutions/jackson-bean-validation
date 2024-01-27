@@ -17,14 +17,14 @@ internal class PathReconstructingDeserializer(
     override fun deserialize(
         p: JsonParser,
         ctxt: DeserializationContext
-    ): Any = deserializeWithPathReconstruction(p) { super.deserialize(p, ctxt) }
+    ): Any? = deserializeWithPathReconstruction(p) { super.deserialize(p, ctxt) }
 }
 
 
 private fun <T> deserializeWithPathReconstruction(
     p: JsonParser,
-    f: () -> T
-): T {
+    f: () -> T?
+): T? {
     try {
         return f()
     } catch (e: JsonMappingException) {
