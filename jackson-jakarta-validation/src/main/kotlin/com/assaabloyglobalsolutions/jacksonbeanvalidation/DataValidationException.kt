@@ -6,13 +6,14 @@ class DataValidationException(
     val violations: List<ConstraintViolation<*>>,
     message: String = toString(violations),
 ) : RuntimeException(message) {
+
+    constructor(
+        violation: ConstraintViolation<*>
+    ) : this(listOf(violation))
+
     internal constructor(
         failedArguments: List<ValidatedArgument>
     ) : this(failedArguments.flatMap { arg -> arg.violations })
-
-    internal constructor(
-        violation: ConstraintViolation<*>
-    ) : this(listOf(violation))
 }
 
 private fun toString(

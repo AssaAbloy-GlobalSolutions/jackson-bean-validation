@@ -28,7 +28,7 @@ internal class JakartaConstraintViolation(
     override fun toString(): String = "ConstraintViolation(${propertyPath}: $message})"
 }
 
-private fun constructPath(path: List<String>): Path {
+internal fun constructPath(path: List<String>): Path {
     return JakartaPath(PathImpl.createRootPath().apply {
         path.forEach(::addContainerElementNode)
     })
