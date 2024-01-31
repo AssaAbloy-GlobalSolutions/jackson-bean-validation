@@ -42,11 +42,12 @@ internal fun <T : Any> ConstraintViolation<T>.withMetadata(
     return JakartaConstraintViolation(this, owner as KClass<Any>, path)
 }
 
-internal fun <T> ConstraintViolation<T>.withParentPath(name: String): ConstraintViolation<Any> {
+internal fun <T> ConstraintViolation<T>.withParentPath(name: String) = withParentPath(listOf(name))
+internal fun <T> ConstraintViolation<T>.withParentPath(pathParts: List<String>): ConstraintViolation<Any> {
     return when (this) {
         is JakartaConstraintViolation ->
-            JakartaConstraintViolation(delegate, owner, listOf(name) + path)
+            JakartaConstraintViolation(delegate, owner, pathParts + path)
         else ->
-            JakartaConstraintViolation(this, null, listOf(name) + propertyPath.map { it.name })
+            JakartaConstraintViolation(this, null, pathParts + propertyPath.map { it.name })
     }
 }

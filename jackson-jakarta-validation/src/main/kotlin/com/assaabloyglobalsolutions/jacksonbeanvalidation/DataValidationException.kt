@@ -1,6 +1,7 @@
 package com.assaabloyglobalsolutions.jacksonbeanvalidation
 
 import com.assaabloyglobalsolutions.jacksonbeanvalidation.validation.jakarta.constraintViolation
+import com.assaabloyglobalsolutions.jacksonbeanvalidation.validation.jakarta.withParentPath
 import jakarta.validation.ConstraintViolation
 
 class DataValidationException(
@@ -11,6 +12,10 @@ class DataValidationException(
     constructor(
         message: String
     ) : this(constraintViolation(message))
+
+    constructor(
+        message: String, path: List<String>
+    ) : this(constraintViolation(message).withParentPath(path))
 
     constructor(
         violation: ConstraintViolation<*>
