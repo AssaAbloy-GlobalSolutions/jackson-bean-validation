@@ -29,9 +29,8 @@ internal class JakartaConstraintViolation(
 }
 
 internal fun constructPath(path: List<String>): Path {
-    return JakartaPath(PathImpl.createRootPath().apply {
-        path.forEach(::addContainerElementNode)
-    })
+    return JakartaPath(PathImpl.createRootPath()
+        .apply { path.forEach(::addContainerElementNode) })
 }
 
 internal fun <T : Any> ConstraintViolation<T>.withMetadata(
