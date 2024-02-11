@@ -7,32 +7,28 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.databind.type.TypeFactory
 import com.assaabloyglobalsolutions.jacksonbeanvalidation.jackson.constructParametricType
 import com.assaabloyglobalsolutions.jacksonbeanvalidation.jackson.treeToValue
-import com.assaabloyglobalsolutions.jacksonbeanvalidation.reflect.isValueClass
 import com.assaabloyglobalsolutions.jacksonbeanvalidation.validation.KotlinBeanValidator
 import com.assaabloyglobalsolutions.jacksonbeanvalidation.validation.jakarta.withParentPath
+import com.fasterxml.jackson.databind.deser.SettableBeanProperty
 import jakarta.validation.ConstraintViolation
-import kotlin.reflect.KClass
-import kotlin.reflect.KFunction
-import kotlin.reflect.KParameter
-import kotlin.reflect.KType
-import kotlin.reflect.full.primaryConstructor
+import kotlin.reflect.*
 import kotlin.reflect.jvm.jvmErasure
 
-/** associates kotlin parameters with underlying json */
-internal class BoundArgument private constructor(
+/** associates kotlin ctor parameters and properties with underlying json */
+internal class BoundProperty private constructor(
     val owner: KClass<*>,
-    val mappedParameter: MappedParameter,
+    val property: Property,
     val json: JsonNode?,
 ) {
     val name: String
-        get() = mappedParameter.name
+        get() = property.jsonFieldName
 
     fun deserializeAndValidate(
         codec: ObjectCodec,
         typeFactory: TypeFactory,
         validator: KotlinBeanValidator,
-    ): ValidatedArgument {
-        val parameter = mappedParameter.parameter
+    ): ValidatedProperty {
+        val name = property.jsonFieldName
 
         // deserialization fails when one or more child objects fail validation
         val value = try {
@@ -40,22 +36,22 @@ internal class BoundArgument private constructor(
         } catch (e: DataValidationException) {
             // constructing the full json path, propagating through parent deserializers
             val violations = e.violations.map { violation -> violation.withParentPath(name) }
-            return ValidatedArgument(parameter, null, violations.toSet())
+            return ValidatedProperty.from(property, null, violations.toSet())
         }
 
         // validate this argument. if the deserialized value is a map or collection
         // disallowing null entries, ensure it doesn't contain any null values.
         val violations: Set<ConstraintViolation<*>> = validator.validate(this, value)
 
-        return if (violations.isNotEmpty()       // existing violations
-            || value != null                     // deserialized value and no violations
-            || parameter.isOptional              // parameter with default value
-            || parameter.type.isMarkedNullable   // nullable field
+        return if (violations.isNotEmpty()     // existing violations
+            || value != null                   // deserialized value and no violations
+            || property.isOptionalParameter    // ctor parameter with default value
+            || property.type.isMarkedNullable  // nullable field
         ) {
-            ValidatedArgument(parameter, value, violations)
+            ValidatedProperty.from(property, value, violations)
         } else {
             // non-nullable property was null
-            ValidatedArgument(parameter, null, setOf(validator.emitNotNullViolation(this)))
+            ValidatedProperty.from(property, null, setOf(validator.emitNotNullViolation(this)))
         }
     }
 
@@ -64,16 +60,16 @@ internal class BoundArgument private constructor(
         typeFactory: TypeFactory,
     ): Any? {
         val json = json ?: return null
-        val parameter = mappedParameter.parameter
+        val type = property.type
 
         // generic type
-        return if (parameter.type.arguments.isNotEmpty()) {
+        return if (type.arguments.isNotEmpty()) {
             try {
                 // weird, can't compare against ::class; different classloaders?
-                if (parameter.type.jvmErasure.qualifiedName == "kotlin.Array") {
-                    codec.treeToValue(json, parameter.type)
+                if (type.jvmErasure.qualifiedName == "kotlin.Array") {
+                    codec.treeToValue(json, type)
                 } else {
-                    val typeRef = typeFactory.constructParametricType(parameter)
+                    val typeRef = typeFactory.constructParametricType(type)
                     codec.readValue(json.traverse(codec), typeRef)
                 }
             } catch (e: JsonMappingException) {
@@ -82,70 +78,81 @@ internal class BoundArgument private constructor(
                     else                       -> e
                 }
             }
-        } else if (parameter.isValueClass) {
+        } else if (type.jvmErasure.isValue) {
             if (json.isNull)
                 return null
 
             // assumption that value classes contain only one json field
-            val valueClass = mappedParameter.valueClass!!
+            val valueClass = property.valueClass!!
             val arg = codec.treeToValue(json.first(), valueClass.underlyingType)
                 ?: return null
 
             // must box value classes for callBy() to work; ref https://youtrack.jetbrains.com/issue/KT-64097
             valueClass.ctor.call(arg)
         } else {
-            codec.treeToValue(json, parameter.type)
+            codec.treeToValue(json, type)
         }
     }
 
-    override fun toString() = "${this::class.simpleName}(${owner.simpleName}::${mappedParameter.name})"
+    override fun toString() = "${this::class.simpleName}(${owner.simpleName}::${property.jsonFieldName})"
 
     companion object {
         fun create(
             owner: KClass<*>,
-            parameter: MappedParameter,
+            property: Property,
             json: JsonNode,
-        ) = BoundArgument(
+        ) = BoundProperty(
             owner,
-            parameter,
-            if (json is ObjectNode) json[parameter.name] else json,
+            property,
+            if (json is ObjectNode) json[property.jsonFieldName] else json,
         )
     }
 }
 
 /** deserialized and validated */
-internal data class ValidatedArgument(
-    val parameter: KParameter,
+internal sealed class ValidatedProperty(
+    val name: String?,
     val value: Any?,
     val violations: Set<ConstraintViolation<*>>
 ) {
     val inputValidationFailed: Boolean
         get() = violations.isNotEmpty()
 
+    override fun toString() = "${this::class.simpleName}($name=$value)"
+
+    companion object {
+        fun from(
+            property: Property,
+            value: Any?,
+            violations: Set<ConstraintViolation<*>>
+        ): ValidatedProperty = when (property) {
+            is ConstructorProperty -> ValidatedConstructorProperty(property.parameter, property.jsonFieldName, value, violations)
+            is BeanProperty        -> ValidatedBeanProperty(property.setter, property.jsonFieldName, value, violations)
+        }
+    }
+}
+
+internal class ValidatedConstructorProperty(
+    val parameter: KParameter,
+    name: String,
+    value: Any?,
+    violations: Set<ConstraintViolation<*>>
+) : ValidatedProperty(name, value, violations) {
+
+    // only ctor parameters
     val supplantedByDefaultValue: Boolean
         get() = parameter.isOptional && value == null
 }
 
-internal data class MappedParameter(
-    val parameter: KParameter,
-    val name: String,
-    val valueClass: ValueClass? = ValueClass.from(parameter)
-)
+internal class ValidatedBeanProperty(
+    val mutator: SettableBeanProperty,
+    name: String,
+    value: Any?,
+    violations: Set<ConstraintViolation<*>>
+) : ValidatedProperty(name, value, violations)
 
-internal data class ValueClass(
-    val ctor: KFunction<Any>,
-    val underlyingType: KType
-) {
-    companion object {
-        fun from(parameter: KParameter): ValueClass? {
-            if (!parameter.isValueClass)
-                return null
-
-            val ctor = parameter.type.jvmErasure.primaryConstructor!!
-            return ValueClass(
-                ctor,
-                ctor.parameters.first().type
-            )
-        }
+private val Property.isOptionalParameter: Boolean
+    get() = when (this) {
+        is ConstructorProperty -> parameter.isOptional
+        else                   -> false
     }
-}

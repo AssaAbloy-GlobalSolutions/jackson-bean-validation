@@ -217,6 +217,25 @@ class JacksonBeanValidationTest {
         )
     }
 
+    @Test
+    fun `non-ctor property deserialization`() {
+        assertViolations<NonCtorDeserialization>(
+            mapper,
+            """ { "foo": "hello", "bar": null } """,
+            "bar: must not be null",
+        )
+    }
+
+    @Test
+    fun `deserialization with inherited fields`() {
+        assertViolations<ExtendedClass>(
+            mapper,
+            """ { "baseFoo": "", "intermediateBar": "" } """,
+            "baseFoo: must not be blank",
+            "intermediateBar: must not be blank",
+        )
+    }
+
     @Test @Disabled
     fun `heed json property naming convention override`() {
         TODO()
@@ -337,4 +356,28 @@ data class OuterHolder(
 // not using constructor deserialization
 class NodeHolder {
     @field:NotNull var node: Node? = null
+}
+
+class Lateinited {
+    lateinit var yolo: String
+}
+
+class NonCtorDeserialization(
+    val foo: String,
+) {
+    @field:NotNull // field is nullable
+    var bar: String? = null
+}
+
+class ExtendedClass : IntermediateClass()
+
+open class IntermediateClass : BaseClass(){
+    @field:NotBlank
+    var intermediateBar: String? = null
+}
+
+abstract class BaseClass {
+    @field:NotBlank
+    @field:JsonProperty("custom_baseFoo")
+    var baseFoo: String? = null
 }

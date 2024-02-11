@@ -7,7 +7,7 @@ import com.fasterxml.jackson.databind.deser.std.CollectionDeserializer
 import com.fasterxml.jackson.databind.deser.std.StringCollectionDeserializer
 import com.fasterxml.jackson.databind.type.CollectionType
 import com.assaabloyglobalsolutions.jacksonbeanvalidation.validation.KotlinBeanValidator
-import kotlin.reflect.full.primaryConstructor
+import com.fasterxml.jackson.module.kotlin.isKotlinClass
 
 internal class ConstraintValidatingDeserializerModifier(
     private val validator: KotlinBeanValidator
@@ -19,7 +19,7 @@ internal class ConstraintValidatingDeserializerModifier(
         deserializer: JsonDeserializer<*>
     ): JsonDeserializer<*> = when {
         deserializer !is BeanDeserializer -> PathReconstructingDeserializer(deserializer)
-        beanDesc.hasPrimaryConstructor    -> ConstraintValidatingDeserializer(deserializer, validator)
+        beanDesc.describesKotlinClass     -> ConstraintValidatingDeserializer(deserializer, validator)
         else                              -> PathReconstructingDeserializer(deserializer)
     }
 
@@ -35,5 +35,5 @@ internal class ConstraintValidatingDeserializerModifier(
     }
 }
 
-private val BeanDescription.hasPrimaryConstructor: Boolean
-    get() = beanClass.kotlin.let { it.primaryConstructor != null && it.isData } // good enough?
+private val BeanDescription.describesKotlinClass: Boolean
+    get() = beanClass.isKotlinClass()

@@ -1,8 +1,9 @@
 package com.assaabloyglobalsolutions.jacksonbeanvalidation
 
 import com.assaabloyglobalsolutions.jacksonbeanvalidation.validation.jakarta.constraintViolation
-import com.assaabloyglobalsolutions.jacksonbeanvalidation.validation.jakarta.withParentPath
+import com.assaabloyglobalsolutions.jacksonbeanvalidation.validation.jakarta.withMetadata
 import jakarta.validation.ConstraintViolation
+import kotlin.reflect.KClass
 
 class DataValidationException(
     val violations: List<ConstraintViolation<*>>,
@@ -14,15 +15,15 @@ class DataValidationException(
     ) : this(constraintViolation(message))
 
     constructor(
-        message: String, path: List<String>
-    ) : this(constraintViolation(message).withParentPath(path))
+        message: String, owner: KClass<*>, path: List<String>
+    ) : this(constraintViolation(message).withMetadata(owner, path))
 
     constructor(
         violation: ConstraintViolation<*>
     ) : this(listOf(violation))
 
     internal constructor(
-        failedArguments: List<ValidatedArgument>
+        failedArguments: List<ValidatedProperty>
     ) : this(failedArguments.flatMap { arg -> arg.violations })
 }
 

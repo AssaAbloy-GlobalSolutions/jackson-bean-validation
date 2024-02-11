@@ -1,40 +1,40 @@
 package com.assaabloyglobalsolutions.jacksonbeanvalidation.validation
 
-import com.assaabloyglobalsolutions.jacksonbeanvalidation.BoundArgument
+import com.assaabloyglobalsolutions.jacksonbeanvalidation.BoundProperty
 import com.assaabloyglobalsolutions.jacksonbeanvalidation.reflect.isNonNullableArray
 import com.assaabloyglobalsolutions.jacksonbeanvalidation.reflect.isNonNullableCollection
 import com.assaabloyglobalsolutions.jacksonbeanvalidation.reflect.isNonNullableMap
-import com.assaabloyglobalsolutions.jacksonbeanvalidation.reflect.isValueClass
 import com.assaabloyglobalsolutions.jacksonbeanvalidation.validation.jakarta.withMetadata
 import jakarta.validation.ConstraintViolation
 import jakarta.validation.Validator
 import jakarta.validation.constraints.NotNull
 import kotlin.reflect.KClass
 import kotlin.reflect.KType
+import kotlin.reflect.jvm.jvmErasure
 
 internal class KotlinBeanValidator(
     private val validator: Validator
 ) {
     fun validate(
-        argument: BoundArgument,
+        argument: BoundProperty,
         value: Any?
     ): Set<ConstraintViolation<*>> {
-        val parameter = argument.mappedParameter.parameter
-        val violations = if (value != null && parameter.isValueClass) {
+        val type = argument.property.type
+        val violations = if (value != null && type.jvmErasure.isValue) {
             validator.validateValueClass(argument, value)
         } else {
-            validator.validateValue(argument.owner.java, argument.mappedParameter.name, value)
+            validator.validateValue(argument.owner.java, argument.property.name, value)
         }
 
         return violations + validateNonNullableGenerics(argument, value)
     }
 
     fun emitNotNullViolation(
-        argument: BoundArgument,
+        argument: BoundProperty,
     ): ConstraintViolation<*> = emitNotNullViolation(argument.owner, listOf(argument.name))
 
     private fun emitNotNullViolation(
-        argument: BoundArgument,
+        argument: BoundProperty,
         path: List<String>,
     ): ConstraintViolation<*> = emitNotNullViolation(argument.owner, path)
 
@@ -49,7 +49,7 @@ internal class KotlinBeanValidator(
     }
 
     private fun Validator.validateValueClass(
-        argument: BoundArgument,
+        argument: BoundProperty,
         value: Any
     ): Set<ConstraintViolation<*>> {
         return validate(value)
@@ -57,14 +57,13 @@ internal class KotlinBeanValidator(
             .toSet()
     }
 
-    private fun validateNonNullableGenerics(argument: BoundArgument, value: Any?): List<ConstraintViolation<*>> {
-        val parameter = argument.mappedParameter.parameter
-        return validateNonNullableGenerics(argument, parameter.type, value, listOf())
+    private fun validateNonNullableGenerics(argument: BoundProperty, value: Any?): List<ConstraintViolation<*>> {
+        return validateNonNullableGenerics(argument, argument.property.type, value, listOf())
     }
 
     // note: recursive with validateNestedContainers()
     private fun validateNonNullableGenerics(
-        argument: BoundArgument,
+        argument: BoundProperty,
         type: KType?,
         value: Any?,
         path: List<String>
@@ -97,7 +96,7 @@ internal class KotlinBeanValidator(
 
     private fun validateNestedContainers(
         container: Any?,
-        argument: BoundArgument,
+        argument: BoundProperty,
         type: KType,
         path: List<String>
     ): List<ConstraintViolation<*>> {
