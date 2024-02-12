@@ -1,3 +1,5 @@
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.assaabloyglobalsolutions.jacksonbeanvalidation/jackson-bean-validation/badge.png)](https://maven-badges.herokuapp.com/maven-central/com.assaabloyglobalsolutions.jacksonbeanvalidation/jackson-bean-validation/badge.png)
+
 ## Jackson Bean Validation
 
 Jackson Bean Validation module performs JSR 380 validation mapping during deserialization.
