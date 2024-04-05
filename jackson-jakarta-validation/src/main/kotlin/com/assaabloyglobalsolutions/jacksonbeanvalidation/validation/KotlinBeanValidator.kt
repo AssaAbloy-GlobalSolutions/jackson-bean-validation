@@ -1,6 +1,7 @@
 package com.assaabloyglobalsolutions.jacksonbeanvalidation.validation
 
 import com.assaabloyglobalsolutions.jacksonbeanvalidation.BoundProperty
+import com.assaabloyglobalsolutions.jacksonbeanvalidation.isOptionalParameter
 import com.assaabloyglobalsolutions.jacksonbeanvalidation.reflect.isNonNullableArray
 import com.assaabloyglobalsolutions.jacksonbeanvalidation.reflect.isNonNullableCollection
 import com.assaabloyglobalsolutions.jacksonbeanvalidation.reflect.isNonNullableMap

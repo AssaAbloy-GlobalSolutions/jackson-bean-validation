@@ -28,7 +28,6 @@ internal class BoundProperty private constructor(
         typeFactory: TypeFactory,
         validator: KotlinBeanValidator,
     ): ValidatedProperty {
-        val name = property.jsonFieldName
 
         // deserialization fails when one or more child objects fail validation
         val value = try {
@@ -151,7 +150,7 @@ internal class ValidatedBeanProperty(
     violations: Set<ConstraintViolation<*>>
 ) : ValidatedProperty(name, value, violations)
 
-private val Property.isOptionalParameter: Boolean
+internal val Property.isOptionalParameter: Boolean
     get() = when (this) {
         is ConstructorProperty -> parameter.isOptional
         else                   -> false

@@ -75,6 +75,7 @@ internal class ConstraintValidatingDeserializer(
             .mapNotNull { arg -> arg as? ValidatedBeanProperty }
             .forEach { arg -> arg.mutator.set(deserialized, arg.value) }
 
+        // \o/
         return deserialized
     }
 
@@ -107,7 +108,7 @@ internal class ConstraintValidatingDeserializer(
         field: String,
         ctxt: DeserializationContext
     ): Nothing {
-        wrapAndThrow(e, handledType(), field, ctxt)
+        wrapAndThrow<Any?>(e, handledType(), field, ctxt)
         error("RETURN")
     }
 }
