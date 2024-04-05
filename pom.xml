@@ -5,7 +5,7 @@
 
     <groupId>com.assaabloyglobalsolutions.jacksonbeanvalidation</groupId>
     <artifactId>jackson-bean-validation</artifactId>
-    <version>1.2.0</version>
+    <version>1.3.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>Jackson Bean Validation for Kotlin</name>
@@ -369,6 +369,6 @@
         <url>https://github.com/AssaAbloy-GlobalSolutions/jackson-bean-validation</url>
         <connection>scm:git:git@github.com:AssaAbloy-GlobalSolutions/jackson-bean-validation.git</connection>
         <developerConnection>scm:git:git@github.com:AssaAbloy-GlobalSolutions/jackson-bean-validation.git</developerConnection>
-        <tag>jackson-bean-validation-1.2.0</tag>
+        <tag>0.1.0</tag>
     </scm>
 </project>
