@@ -1,4 +1,4 @@
-## jackson-bean-validation-1.2.0 (2024-02-11)
+## jackson-bean-validation-1.2.3 (2024-04-08)
 - Bump Jackson requirement to 2.17 or later. Earlier versions fail when running against 2.17.
 
 
